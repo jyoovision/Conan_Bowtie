@@ -1,5 +1,5 @@
 Success.
 Index:
-assets/model/yoonjikim.index.
+assets/model/famous.index.
 Time:
-npy: 0.11s, f0: 0.74s, infer: 0.10s.
+npy: 0.09s, f0: 1.50s, infer: 0.45s.

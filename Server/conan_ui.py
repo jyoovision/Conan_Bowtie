@@ -133,11 +133,12 @@ class ProgressBarThread(QThread):
 
     def run(self):
         for i in range(101):
-            time.sleep(0.03)  # 총 3초 동안 실행
+            time.sleep(0.05)  # 총 5초 동안 실행
             self.update_progress.emit(i)  # 프로그레스 바 값을 업데이트하는 시그널 발생
         self.update_progress.emit(0)  # 완료 후 프로그레스 바 초기화
         progress_bar.hide()
         send_audio_button.show()
+        server_thread.send_message(f"{current_voice} voice Ready")
 
 
 class Recorder:
