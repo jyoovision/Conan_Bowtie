@@ -29,7 +29,7 @@ This repository is a project that turns the anime Detective Conan's bow tie into
 
 
 ### 나비넥타이 ui  
-음성변조를 위해 RVC를 사용하였습니다. RVC 레포지토리는 [여기]에서 확인할 수 있습니다.  
+음성변조를 위해 RVC를 사용하였습니다. RVC 레포지토리는 [여기](https://github.com/RVC-Project)에서 확인할 수 있습니다.  
 
 RVC 를 활용하여 유명한 탐정, 미란이 목소리를 미리 학습시키고, pyQt Ui와 연동하여 실시간 변환을 진행합니다.
 
