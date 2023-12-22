@@ -1,3 +1,5 @@
+![Frame 5](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/b1d03904-803e-4980-9280-ffd2feef063c)
+
 # Conan_Bowtie
 This repository is a project that turns the anime Detective Conan's bow tie into a real device and controls it in pyQT.
 
@@ -18,8 +20,13 @@ This repository is a project that turns the anime Detective Conan's bow tie into
 
 6. 와이파이 통신을 사용하기 때문에 보조배터리만 있다면 무선으로 사용 가능합니다.
 
+![Frame 3](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/9902cc3e-5701-40a5-8ec1-bccff80aa390)
+
 
 ## 제작 방식
+
+![Frame 6](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/6893fb7a-60da-4046-850e-d1a48af60e07)
+
 
 ### 나비넥타이 ui  
 음성변조를 위해 RVC를 사용하였습니다. RVC 레포지토리는 [여기]에서 확인할 수 있습니다.  
