@@ -234,7 +234,7 @@ def on_dial_changed(value):
         dial_label.setText("김윤지 교수님")
         new_voice = "yoonjikim"
     else:
-        dial_label.setText("변조할 목소리")
+        dial_label.setText("변조할 목소리 선택")
         modulation_button.hide()
         new_voice = None
 
