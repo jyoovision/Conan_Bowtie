@@ -23,6 +23,7 @@ This repository is a project that turns the anime Detective Conan's bow tie into
 ![Frame 3](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/9902cc3e-5701-40a5-8ec1-bccff80aa390)
 
 
+
 ## 제작 방식
 
 ![Frame 6](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/6893fb7a-60da-4046-850e-d1a48af60e07)
@@ -39,6 +40,10 @@ ESP32-PICO-V3기기를 사용하여 와이파이 통신으로 오디오 스트�
 
 브레드보드에서 프로토타입을 제작하여 테스트한 뒤, 패키징을 여러번 진행하였으나, 실패로 마무리되었습니다.
 
+
 그러나 브레드보드의 작은 부분을 앞뒤로 붙여 사용하는 기지를 발휘하여 작은 사이즈로 패키징 하였습니다.
+
+
+![Frame 8](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/236f4d4b-35b7-469e-9a22-278514c5df07)
 
 
