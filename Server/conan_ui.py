@@ -6,10 +6,8 @@ from PyQt5.QtWidgets import (
     QDial,
     QProgressBar,
 )
-from PyQt5.QtGui import QPixmap, QPalette, QBrush, QIcon
+from PyQt5.QtGui import QPixmap, QPalette, QBrush
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-import os
-import struct
 import pyaudio
 import wave
 import socket
@@ -23,6 +21,7 @@ import time
 load_dotenv()
 first_record = False
 current_voice = None
+current_audio = None
 vc = VC(Config())
 
 
@@ -51,41 +50,78 @@ class ServerThread(QThread):
             self.conn, self.addr = s.accept()
             print(f"연결됨: {self.addr}")
             self.status_signal.emit(f"Connected: {self.addr}")
-            server_thread.send_message("Server connected")
+            server_thread.send_message("Server connected!")
             self.connection_established.emit(self.conn)  # 연결된 소켓을 메인 스레드로 전송
+
+            while True:  # 클라이언트로부터 데이터를 지속적으로 수신
+                try:
+                    data = self.conn.recv(1024)  # 클라이언트로부터 데이터 받기
+                    if not data:
+                        break  # 데이터가 없으면 루프 탈출
+
+                    # 수신된 데이터 처리
+                    message = data.decode()  # 수신된 데이터를 문자열로 변환
+                    self.process_message(message)  # 메시지 처리 함수 호출
+
+                except Exception as e:
+                    print(f"데이터 수신 중 오류 발생: {e}")
+                    break
+
+    def process_message(self, message):
+        global current_audio
+        if not message.strip():
+            return
+
+        print(f"수신된 메시지: {message}")
+
+        if message == "End audio streaming":
+            if current_audio == "O":
+                send_audio_button.show()
+            else:
+                playback_button.show()
+            current_audio = None
+        elif message == "button pressed":
+            server_thread.send_audio("../InputOutput/output_audio.wav")
 
     def send_audio(self, audio_path):
         if self.conn:
             try:
-                header = "audio:"  # 오디오 데이터 헤더
-                self.conn.send(header.encode())  # 헤더 전송
-
                 wf = wave.open(audio_path, "rb")
 
-                # 오디오 파일의 전체 크기 계산 및 전송
-                file_size = os.path.getsize(audio_path)
-                self.conn.send(struct.pack("I", file_size) + b"\n")
+                # 오디오 데이터 헤더 전송
+                header = "audio:"
+                self.conn.send(header.encode())
 
                 # 오디오 데이터 청크 단위로 전송
-                CHUNK_SIZE = 4096  # 청크 크기 설정
+                CHUNK_SIZE = 4096
                 data = wf.readframes(CHUNK_SIZE)
                 while data:
                     self.conn.send(data)
                     data = wf.readframes(CHUNK_SIZE)
 
+                time.sleep(1)  # 1초 대기
+
+                # 오디오 전송 종료 신호 전송
+                eos_signal = "EOS"
+                self.conn.send(eos_signal.encode())
+                wf.close()
+
             except Exception as e:
                 print(f"오디오 전송 에러: {e}")
-            finally:
-                wf.close()
+
         else:
             print("아직 클라이언트에 연결되지 않음")
 
     def send_message(self, message):
         if self.conn:
             try:
-                header = "text:"  # 텍스트 메시지 헤더
-                full_message = header + message + "\n"  # 헤더와 메시지 결합
-                self.conn.sendall(full_message.encode())  # 헤더와 메시지 전송
+                # 텍스트 메시지 헤더 전송
+                header = "text:"
+
+                # 텍스트 메시지 전송
+                full_message = header + message + "\n"
+                self.conn.sendall(full_message.encode())
+
             except Exception as e:
                 print(f"메시지 전송 에러: {e}")
         else:
@@ -97,7 +133,7 @@ class ProgressBarThread(QThread):
 
     def run(self):
         for i in range(101):
-            time.sleep(0.02)  # 총 2초 동안 실행
+            time.sleep(0.03)  # 총 3초 동안 실행
             self.update_progress.emit(i)  # 프로그레스 바 값을 업데이트하는 시그널 발생
         self.update_progress.emit(0)  # 완료 후 프로그레스 바 초기화
         progress_bar.hide()
@@ -169,7 +205,7 @@ def on_button_click():
         playback_button.hide()  # 녹음 중에는 재생 버튼 숨기기
         modulation_button.hide()
         send_audio_button.hide()
-        server_thread.send_message("Recording started")
+        server_thread.send_message("Recording ...")
 
     else:
         recorder.stop_recording()
@@ -179,7 +215,7 @@ def on_button_click():
         if current_voice is not None:
             modulation_button.show()
         first_record = True
-        server_thread.send_message("Recording stopped")
+        server_thread.send_message("Recording complete!")
 
 
 def on_dial_changed(value):
@@ -203,7 +239,7 @@ def on_dial_changed(value):
 
     # 목소리가 변경되었을 때만 set_vc() 함수 호출
     if new_voice != current_voice:
-        server_thread.send_message(f"Selected voice: {new_voice}")
+        server_thread.send_message(f"{new_voice} Selected")
         current_voice = new_voice
         if new_voice is not None:
             set_vc(new_voice)
@@ -221,12 +257,21 @@ def on_modulation_button_clicked():
 
     # RVC 함수 실행
     threading.Thread(target=lambda: RVC(vc, current_voice)).start()
-    server_thread.send_message("Voice modulation started")
+    server_thread.send_message("Converting ...")
 
 
 def send_audio(path):
+    global current_audio
+
+    if path == "../InputOutput/output_audio.wav":
+        current_audio = "O"
+        send_audio_button.hide()
+    else:
+        current_audio = "I"
+        playback_button.hide()
+
+    QApplication.processEvents()
     server_thread.send_audio(path)
-    server_thread.send_message(f"{current_voice} voice sent successfully")
 
 
 app = QApplication([])
@@ -270,7 +315,7 @@ button.resize(100, 30)  # 버튼의 크기 설정
 button.clicked.connect(on_button_click)
 
 # 재생 버튼 생성 및 위치와 크기 설정
-playback_button = QPushButton("녹음 확인", window)
+playback_button = QPushButton("녹음 재생", window)
 playback_button.setStyleSheet(
     "QPushButton {"
     "background-image: url('../Imgs/button.png');"
@@ -329,7 +374,7 @@ progress_bar.setTextVisible(False)
 progress_bar.hide()
 
 # 오디오 전송 버튼
-send_audio_button = QPushButton("오디오 전송", window)
+send_audio_button = QPushButton("오디오 재생", window)
 send_audio_button.setStyleSheet(
     "QPushButton {"
     "background-image: url('../Imgs/button.png');"

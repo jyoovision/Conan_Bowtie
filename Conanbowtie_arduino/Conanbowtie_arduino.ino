@@ -3,26 +3,32 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-const char *ssid = "KT_GiGA_Mesh_048A";     // Wi-Fi 네트워크 이름
-const char *password = "3fg5czb747"; // Wi-Fi 네트워크 비밀번호
+//Wifi 연결 설정
+const char *ssid = "KT_GiGA_Mesh_048A";
+const char *password = "3fg5czb747";
 
-const char* host = "172.30.1.51";  // 서버의 IP 주소
-const uint16_t port = 12345;       // 서버의 포트 번호
+// 서버 연결 설정
+const char* host = "172.30.1.51";
+const uint16_t port = 12345; 
 WiFiClient client;
 
-#define CHUNK_SIZE 4096  // 청크 데이터 크기
-uint8_t audioChunk[CHUNK_SIZE];
-
+// 메시지 수신 설정
 #define MESSAGE_BUFFER_SIZE 100  // 메시지 버퍼 크기
 char messageBuffer[MESSAGE_BUFFER_SIZE];  // 메시지 수신용 버퍼
 
-// OLED 디스플레이의 사이즈 정의
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+// 오디오 수신 설정
+#define CHUNK_SIZE 4096 // 오디오 버퍼 크기
+uint8_t audioChunk[CHUNK_SIZE];
 
-// OLED 디스플레이의 I2C 주소 (대부분의 모듈은 0x3C를 사용)
+// OLED 디스플레이 설정
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 32
 #define OLED_RESET    -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// 버튼 설정
+#define BUTTON_PIN 5
+bool buttonPressed = false;
 
 void setup() {
   Serial.begin(115200);
@@ -51,16 +57,20 @@ void setup() {
   };
   i2s_set_pin(I2S_NUM_0, &pin_config);
 
-  // 메시지 버퍼 초기화
+  // 버튼 설정
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+  // 메시지 수신 설정
   memset(messageBuffer, 0, MESSAGE_BUFFER_SIZE);
 
-  // OLED 초기화
+  // 오디오 수신 설정
+  memset(audioChunk, 0, CHUNK_SIZE);
+
+  // OLED 디스플레이 설정
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
-
-  // 디스플레이 설정
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -68,7 +78,7 @@ void setup() {
   display.println(F("Conan Bowtie"));
   display.display();
 
-  // Wi-Fi 연결
+  // Wi-Fi 연결 설정
   WiFi.begin(ssid, password);
   Serial.println("Wi-Fi에 연결을 시도합니다...");
   while (WiFi.status() != WL_CONNECTED) {
@@ -79,7 +89,7 @@ void setup() {
   Serial.print("IP 주소: ");
   Serial.println(WiFi.localIP());
 
-  // 서버에 연결
+  // 서버 연결 설정
   if (!client.connect(host, port)) {
     Serial.println("서버에 연결할 수 없습니다.");
     while(1);
@@ -87,7 +97,27 @@ void setup() {
   Serial.println("서버에 연결되었습니다.");
 }
 
+
+void sendMessageToServer(const String& message) {
+  if (client.connected()) {
+    client.println(message);
+  } else {
+    Serial.println("서버에 연결되어 있지 않습니다.");
+  }
+}
+
+
 void loop() {
+  // 버튼 로직
+  if (digitalRead(BUTTON_PIN) == LOW) {
+    if (!buttonPressed) {
+      sendMessageToServer("button pressed");
+      buttonPressed = true;
+    }
+  } else {
+    buttonPressed = false;  // 버튼이 놓아졌음을 감지
+  }
+
   // 서버에서 데이터 수신
   if (client.available()) {
     // 헤더 확인을 위해 첫 문자열 읽기
@@ -99,39 +129,34 @@ void loop() {
       messageBuffer[messageLength] = '\0';  // 문자열 종료 문자 추가
 
       // 디스플레이에 메시지 출력
-      display.clearDisplay();  // 디스플레이 클리어
-      display.setCursor(0,0);  // 커서 초기화
-      display.println(messageBuffer);  // 메시지 출력
-      display.display();  // 변경 사항 적용
+      display.clearDisplay();
+      display.setCursor(0,0);
+      display.println(messageBuffer);
+      display.display();
       
     } else if (header == "audio") {
-      // 오디오 데이터 길이 수신
-      uint32_t totalLength = 0;
-      client.readBytes((char*)&totalLength, sizeof(totalLength));
-      Serial.print("Total audio length: ");
-      Serial.println(totalLength);
+      memset(audioChunk, 0, CHUNK_SIZE);
+      bool isEOSReceived = false;
 
-      // 전체 데이터 수신 및 바로 재생
-      size_t receivedLength = 0;
-      while (receivedLength < totalLength) {
-        size_t bytesToRead = min(static_cast<size_t>(CHUNK_SIZE), static_cast<size_t>(totalLength - receivedLength));
-        size_t bytesRead = client.read(audioChunk, bytesToRead);
-
+      while (!isEOSReceived) {
+        size_t bytesRead = client.read(audioChunk, CHUNK_SIZE);
         if (bytesRead > 0) {
-          receivedLength += bytesRead;
+          // bytesRead가 3이고, 내용이 "EOS"인지 확인
+          if (bytesRead == 3 && memcmp(audioChunk, "EOS", 3) == 0) {
+            isEOSReceived = true;
+            Serial.println("오디오 스트리밍 종료");
+            sendMessageToServer("End audio streaming");
+            memset(audioChunk, 0, CHUNK_SIZE);
+            break;
+          }
+
           size_t bytes_written;
           i2s_write(I2S_NUM_0, audioChunk, bytesRead, &bytes_written, portMAX_DELAY);
-          Serial.print("Played audio chunk: ");
-          Serial.print(bytesRead);
-          Serial.print(" bytes, Total received: ");
-          Serial.println(receivedLength);
-        } else {
-          delay(10); // 네트워크 지연 대기
+          // Serial.print("Played audio chunk: ");
+          // Serial.println(bytesRead);
         }
+        delay(10); // 네트워크 지연 대기
       }
-      // 버퍼 초기화
-      memset(audioChunk, 0, CHUNK_SIZE);
-      Serial.println("Audio playback completed and buffer cleared");
     }
   }
 }

@@ -1,5 +1,5 @@
 Success.
 Index:
-assets/model/miran.index.
+assets/model/yoonjikim.index.
 Time:
-npy: 0.05s, f0: 4.74s, infer: 0.63s.
+npy: 0.11s, f0: 0.74s, infer: 0.10s.
