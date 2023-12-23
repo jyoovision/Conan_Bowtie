@@ -25,25 +25,29 @@
 <br/>  
 
 # 제작 방식
-### 나비넥타이 제작 과정
+
+<br/>  
+
+### 나비넥타이 제작 과정(인포그래픽)
 ![Frame 8](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/236f4d4b-35b7-469e-9a22-278514c5df07)  
 
+<br/>  
 
 ### 나비넥타이 ui  
 ![6  변환 중](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/074a5029-5422-431f-ae5f-7f8c1b5aed35)  
 
-
-음성변조를 위해 RVC를 사용하였습니다. RVC 레포지토리는 [여기](https://github.com/RVC-Project)에서 확인할 수 있습니다.  
+음성변조를 위해 RVC를 사용하였습니다. RVC 레포지토리는 [여기](https://github.com/RVC-Project)에서 확인할 수 있습니다.
 
 RVC를 활용하여 유명한 탐정, 미란이 등 목소리를 미리 학습시키고, pyQt Ui와 연동하여 실시간 변환을 진행합니다.
 
+<br/>  
 
 ### 나비넥타이 device  
 ![pkg](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/adcc47a2-c981-429a-8a57-c5dccaf3019d)
 
-ESP32-PICO-V3기기를 사용하여 와이파이 통신으로 오디오 스트리밍 방식을 구현하였습니다.
+ESP32-PICO-V3기기를 사용하여 와이파이 통신으로 오디오 스트리밍 방식을 구현하였습니다.  
 
-브레드보드에서 프로토타입을 제작하여 테스트한 뒤,
+브레드보드에서 프로토타입을 제작하여 테스트한 뒤,  
 
 만능기판을 이용하여, 손바닥만한 작은 사이즈로 패키징하였습니다.
 
