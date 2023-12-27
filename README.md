@@ -1,7 +1,7 @@
 ![Frame 5](https://github.com/jyoovision/Conan_Bowtie/assets/124518704/b1d03904-803e-4980-9280-ffd2feef063c)
 
 # 소개
-이 레포지토리는 만화 명탐정 코난의 나비넥타이를 실제 장치로 바꾸고 이를 pyQt에서 제어하는 ​​프로젝트입니다.  
+이 레포지토리는 만화 명탐정 코난의 나비넥타이를 실제 장치로 바꾸고 이를 pyQt GUI에서 제어하는 ​​프로젝트입니다.  
 자세한 프로젝트 개요와 시연 영상은 아래 링크에서 확인할 수 있습니다.
 
 [내이름은코난이조 3-2 프로젝트](https://sites.google.com/u/0/d/1EUl1t78-mDn8tvIg2rFbYJqpqM5RhRJy/p/1fvR1vux2p6-NRxdmeTO8siCSs4EotQxO/preview)
